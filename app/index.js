@@ -108,8 +108,19 @@ app.get('/user/:id', isAuthenticated, (req,res) => {
 });
 
 app.post('/user', (req, res) => {
-  if (_.isEmpty(req.body))
-    return res.sendStatus(400);
+  const body = req;
+
+  if (!body.username || !body.password || !body['confirm-password']) {
+    req.flash('error', 'All fields are required!');
+    return res.redirect('/signup');
+  }
+
+  if (body.password !== body['confirm-password']) {
+    req.flash('error', 'Password did not match confirmation!');
+    return res.redirect('/signup');
+  }
+
+  delete body['confirm-password'];
 
   User
     .forge(req.body)
@@ -119,7 +130,6 @@ app.post('/user', (req, res) => {
     })
     .catch((error) => {
       console.error(error);
-      req.flash('error', error.message);
       return res.sendStatus(500);
     });
 });
@@ -242,6 +252,10 @@ app.get('/', isAuthenticated, (req, res) => {
 
 app.get('/login', (req, res) => {
   res.render('login', { message: req.flash('error') });
+});
+
+app.get('/signup', (req, res) => {
+  res.render('signup', {message: req.flash('error') });
 });
 
 app.post('/login', passport.authenticate('local', {
