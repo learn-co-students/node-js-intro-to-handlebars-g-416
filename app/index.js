@@ -108,19 +108,22 @@ app.get('/user/:id', isAuthenticated, (req,res) => {
 });
 
 app.post('/user', (req, res) => {
-  const body = req;
 
-  if (!body.username || !body.password || !body['confirm-password']) {
+  const username = req.body.username;
+  const password = req.body.password;
+  const confirmation = req.body['confirm-password']
+
+  if (!username || !password || !confirmation) {
     req.flash('error', 'All fields are required!');
     return res.redirect('/signup');
   }
 
-  if (body.password !== body['confirm-password']) {
+  if (password !== confirmation) {
     req.flash('error', 'Password did not match confirmation!');
     return res.redirect('/signup');
   }
 
-  delete body['confirm-password'];
+  delete req['confirm-password'];
 
   User
     .forge(req.body)
