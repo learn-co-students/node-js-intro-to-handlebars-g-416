@@ -244,11 +244,42 @@ app.get('/login', (req, res) => {
   res.render('login', { message: req.flash('error') });
 });
 
+app.get('/signup', (req, res) => {
+  res.render('signup', { message: req.flash('error') });
+});
+
 app.post('/login', passport.authenticate('local', {
   failureRedirect: '/login',
   failureFlash: true
 }), function(req, res) {
   res.redirect('/posts');
+});
+
+app.post('/user', (req, res) => {
+  const { body } = req;
+
+  if (!body.username || !body.password || !body['confirm-password']) {
+    req.flash('error', 'All fields are required!');
+    return res.redirect('/signup');
+  }
+
+  if (body.password !== body['confirm-password']) {
+    req.flash('error', 'Password did not match confirmation!');
+    return res.redirect('/signup');
+  }
+
+  delete body['confirm-password'];
+
+  User
+    .forge(req.body)
+    .save()
+    .then((usr) => {
+      res.send({id: usr.id});
+    })
+    .catch((error) => {
+      console.error(error);
+      return res.sendStatus(500);
+    });
 });
 
 // Exports for Server Hoisting.
